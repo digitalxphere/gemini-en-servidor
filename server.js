@@ -335,29 +335,35 @@ app.post('/api/vin/inyector', async (req, res) => {
         if (motor) contexto += `\nN° Motor: ${motor}`;
         if (combustible) contexto += `\nCombustible: ${combustible}`;
 
-        const question = `Eres Especialista Senior en Inteligencia de Repuestos OEM y Analista de EPC (Catálogos Electrónicos de Partes).
-Objetivo: Identificación inequívoca de componentes para CHILE, evitando devoluciones comerciales.
+        const question = `Actúa como Especialista Senior en Inteligencia de Repuestos y Analista de EPC con enfoque exclusivo en el mercado chileno.
+Misión: Identificación técnica inequívoca de componentes para evitar devoluciones comerciales y errores de montaje.
 
-DATOS DEL VEHÍCULO:
-${contexto}
+VIN: ${vin}
+Componente: INYECTOR DIESEL
+Mercado: CHILE
+${marca ? `Marca: ${marca}` : ''}
+${modelo ? `Modelo: ${modelo}` : ''}
+${año ? `Año: ${año}` : ''}
+${motor ? `Motor: ${motor}` : ''}
 
 PROTOCOLO DE ANÁLISIS:
-1. DECODIFICACIÓN VIN: Analiza WMI, VDS, VIS. Identifica planta de ensamblaje y año real.
-2. FILTRO REGIONAL CRÍTICO: Mercado destino = CHILE. Valida especificaciones locales que alteran el SKU (inyectores específicos para normativas de emisiones chilenas).
-3. VALIDACIÓN EMISIONES: Determina estándar de emisiones (Euro 3, 4, 5, 6) mediante el código de motor del VIN.
-4. JERARQUÍA DE DATOS: Catálogo OEM Chile > Boletines de Servicio (TSB) > Tier 1 (Bosch, Denso, Delphi, Continental) > Cross-reference verificado.
+1. DECODIFICACIÓN VIN ESTRUCTURAL: Analiza WMI, VDS y VIS (planta y dígito de año) para determinar la generación del motor.
+2. FILTRO DE EMISIONES CHILE (CRÍTICO): Identifica si es Euro 4, 5 o 6 basándose en el año y VIN. Para Chile, es MANDATORIO distinguir entre motores 'CON DPF' y 'SIN DPF', ya que comparten modelo pero usan inyectores con caudales y códigos IMA distintos.
+3. VALIDACIÓN EN PORTALES LOCALES: Realiza búsqueda cruzada en dtparts.cl y centralturbos.cl para confirmar que el SKU coincide con la oferta técnica para Chile y no es una referencia genérica de catálogos europeos/indios.
+4. REGLA DE EXCLUSIÓN: Si detectas que un inyector es físicamente idéntico pero técnicamente incompatible por norma de emisiones, repórtalo en 'Advertencias'.
 
-BÚSQUEDA: INYECTOR DIESEL
+FORMATO DE SALIDA (JSON EXCLUSIVO):
+{
+  "Ficha_Tecnica": {"Marca": "", "Modelo": "", "Año": "", "Motor": "", "Sistema_Emisiones": "Euro X CON/SIN DPF"},
+  "SKU_OEM_Chile": "Código vigente según distribuidores locales",
+  "Codigos_Reemplazados": [],
+  "Referencia_Tier_1": {"Fabricante": "Bosch/Denso/Delphi", "Numero_Parte": ""},
+  "Cantidad_por_motor": 4,
+  "Nivel_de_Certeza": {"Porcentaje": "0-100%", "Sustento_Tecnico": "basado en cruce con dtparts.cl/centralturbos.cl"},
+  "Advertencias_Chile": "Diferencias específicas para parque automotriz chileno"
+}
 
-REGLA DE ORO: Si el inyector tiene variaciones por mercado, reporta el SKU específico para CHILE y advierte sobre incompatibilidad de referencias globales genéricas.
-
-FORMATO DE RESPUESTA:
-- Ficha Técnica: [Marca] [Modelo] [Año] [Motor] [Mercado: Chile] [Norma Emisiones]
-- SKU OEM: Código vigente + códigos anteriores/reemplazados
-- Referencia Tier 1: Número de parte del fabricante original (Bosch/Denso/Delphi)
-- Cantidad por motor: (número de inyectores)
-- Nivel de Certeza: [0-100%] + Sustento técnico de compatibilidad regional
-- Advertencias: Diferencias críticas detectadas para mercado Chile`;
+Responde EXCLUSIVAMENTE en formato JSON, sin comentarios adicionales, sin enlaces de video y sin preguntas finales.`;
 
         console.log(`🔍 Buscando INYECTOR para: ${marca || ''} ${modelo || ''} (${vin})`);
         const answer = await askGemini(question);
@@ -390,29 +396,35 @@ app.post('/api/vin/turbo', async (req, res) => {
         if (motor) contexto += `\nN° Motor: ${motor}`;
         if (combustible) contexto += `\nCombustible: ${combustible}`;
 
-        const question = `Eres Especialista Senior en Inteligencia de Repuestos OEM y Analista de EPC (Catálogos Electrónicos de Partes).
-Objetivo: Identificación inequívoca de componentes para CHILE, evitando devoluciones comerciales.
+        const question = `Actúa como Especialista Senior en Inteligencia de Repuestos y Analista de EPC con enfoque exclusivo en el mercado chileno.
+Misión: Identificación técnica inequívoca de componentes para evitar devoluciones comerciales y errores de montaje.
 
-DATOS DEL VEHÍCULO:
-${contexto}
+VIN: ${vin}
+Componente: TURBOCOMPRESOR
+Mercado: CHILE
+${marca ? `Marca: ${marca}` : ''}
+${modelo ? `Modelo: ${modelo}` : ''}
+${año ? `Año: ${año}` : ''}
+${motor ? `Motor: ${motor}` : ''}
 
 PROTOCOLO DE ANÁLISIS:
-1. DECODIFICACIÓN VIN: Analiza WMI, VDS, VIS. Identifica planta de ensamblaje y año real.
-2. FILTRO REGIONAL CRÍTICO: Mercado destino = CHILE. Valida especificaciones locales que alteran el SKU (turbos reforzados o actuadores específicos para normativas de emisiones chilenas).
-3. VALIDACIÓN EMISIONES: Determina estándar de emisiones (Euro 3, 4, 5, 6) mediante el código de motor del VIN.
-4. JERARQUÍA DE DATOS: Catálogo OEM Chile > Boletines de Servicio (TSB) > Tier 1 (Garrett, BorgWarner, MHI, IHI, Holset) > Cross-reference verificado.
+1. DECODIFICACIÓN VIN ESTRUCTURAL: Analiza WMI, VDS y VIS (planta y dígito de año) para determinar la generación del motor.
+2. FILTRO DE EMISIONES CHILE (CRÍTICO): Identifica si es Euro 4, 5 o 6. Para Chile, es MANDATORIO distinguir entre motores 'CON DPF' y 'SIN DPF', ya que comparten modelo pero usan turbos con actuadores y geometrías distintas.
+3. VALIDACIÓN EN PORTALES LOCALES: Realiza búsqueda cruzada en dtparts.cl y centralturbos.cl para confirmar que el SKU coincide con la oferta técnica para Chile.
+4. REGLA DE EXCLUSIÓN: Si detectas que un turbo es físicamente idéntico pero técnicamente incompatible por norma de emisiones, repórtalo en 'Advertencias'.
 
-BÚSQUEDA: TURBOCOMPRESOR
+FORMATO DE SALIDA (JSON EXCLUSIVO):
+{
+  "Ficha_Tecnica": {"Marca": "", "Modelo": "", "Año": "", "Motor": "", "Sistema_Emisiones": "Euro X CON/SIN DPF"},
+  "SKU_OEM_Chile": "Código vigente según distribuidores locales",
+  "Codigos_Reemplazados": [],
+  "Referencia_Tier_1": {"Fabricante": "Garrett/BorgWarner/MHI", "Numero_Parte": ""},
+  "Tipo_Turbo": "VGT/Wastegate/Twin-scroll",
+  "Nivel_de_Certeza": {"Porcentaje": "0-100%", "Sustento_Tecnico": "basado en cruce con dtparts.cl/centralturbos.cl"},
+  "Advertencias_Chile": "Diferencias específicas para parque automotriz chileno"
+}
 
-REGLA DE ORO: Si el turbo tiene variaciones por mercado, reporta el SKU específico para CHILE y advierte sobre incompatibilidad de referencias globales genéricas.
-
-FORMATO DE RESPUESTA:
-- Ficha Técnica: [Marca] [Modelo] [Año] [Motor] [Mercado: Chile] [Norma Emisiones]
-- SKU OEM: Código vigente + códigos anteriores/reemplazados
-- Referencia Tier 1: Número de parte del fabricante original (Garrett/BorgWarner/MHI)
-- Tipo de turbo: (geometría variable VGT, wastegate, twin-scroll, etc.)
-- Nivel de Certeza: [0-100%] + Sustento técnico de compatibilidad regional
-- Advertencias: Diferencias críticas detectadas para mercado Chile`;
+Responde EXCLUSIVAMENTE en formato JSON, sin comentarios adicionales, sin enlaces de video y sin preguntas finales.`;
 
         console.log(`🔍 Buscando TURBO para: ${marca || ''} ${modelo || ''} (${vin})`);
         const answer = await askGemini(question);
@@ -467,29 +479,33 @@ app.post('/api/vin/turbo/stream', async (req, res) => {
         if (motor) contexto += `\nN° Motor: ${motor}`;
         if (combustible) contexto += `\nCombustible: ${combustible}`;
 
-        const question = `Eres Especialista Senior en Inteligencia de Repuestos OEM y Analista de EPC (Catálogos Electrónicos de Partes).
-Objetivo: Identificación inequívoca de componentes para CHILE, evitando devoluciones comerciales.
+        const question = `Actúa como Especialista Senior en Inteligencia de Repuestos y Analista de EPC con enfoque exclusivo en el mercado chileno.
+Misión: Identificación técnica inequívoca de componentes para evitar devoluciones comerciales.
 
-DATOS DEL VEHÍCULO:
-${contexto}
+VIN: ${vin}
+Componente: TURBOCOMPRESOR
+Mercado: CHILE
+${marca ? `Marca: ${marca}` : ''}
+${modelo ? `Modelo: ${modelo}` : ''}
+${año ? `Año: ${año}` : ''}
 
-PROTOCOLO DE ANÁLISIS:
-1. DECODIFICACIÓN VIN: Analiza WMI, VDS, VIS. Identifica planta de ensamblaje y año real.
-2. FILTRO REGIONAL CRÍTICO: Mercado destino = CHILE. Valida especificaciones locales que alteran el SKU.
-3. VALIDACIÓN EMISIONES: Determina estándar de emisiones (Euro 3, 4, 5, 6) mediante el código de motor del VIN.
-4. JERARQUÍA DE DATOS: Catálogo OEM Chile > TSB > Tier 1 (Garrett, BorgWarner, MHI, IHI, Holset) > Cross-reference.
+PROTOCOLO:
+1. DECODIFICACIÓN VIN: Analiza WMI, VDS, VIS para determinar generación del motor.
+2. FILTRO EMISIONES CHILE: Distingue entre 'CON DPF' y 'SIN DPF'.
+3. VALIDACIÓN: Cruce con dtparts.cl y centralturbos.cl.
+4. REGLA: Si el turbo es incompatible por emisiones, repórtalo.
 
-BÚSQUEDA: TURBOCOMPRESOR
+FORMATO JSON EXCLUSIVO:
+{
+  "Ficha_Tecnica": {"Marca": "", "Modelo": "", "Año": "", "Motor": "", "Sistema_Emisiones": "Euro X CON/SIN DPF"},
+  "SKU_OEM_Chile": "",
+  "Referencia_Tier_1": {"Fabricante": "", "Numero_Parte": ""},
+  "Tipo_Turbo": "",
+  "Nivel_de_Certeza": {"Porcentaje": "", "Sustento": ""},
+  "Advertencias_Chile": ""
+}
 
-REGLA DE ORO: Si el turbo tiene variaciones por mercado, reporta el SKU específico para CHILE y advierte sobre incompatibilidad de referencias globales.
-
-FORMATO DE RESPUESTA:
-- Ficha Técnica: [Marca] [Modelo] [Año] [Motor] [Mercado: Chile] [Norma Emisiones]
-- SKU OEM: Código vigente + códigos reemplazados
-- Referencia Tier 1: (Garrett/BorgWarner/MHI número de parte)
-- Tipo de turbo: (VGT, wastegate, twin-scroll, etc.)
-- Nivel de Certeza: [0-100%] + Sustento técnico
-- Advertencias: Diferencias críticas para mercado Chile`;
+Responde SOLO en JSON, sin comentarios ni enlaces.`;
 
         sendEvent('enviando', { message: 'Enviando consulta...' });
 
@@ -617,29 +633,33 @@ app.post('/api/vin/inyector/stream', async (req, res) => {
         if (motor) contexto += `\nN° Motor: ${motor}`;
         if (combustible) contexto += `\nCombustible: ${combustible}`;
 
-        const question = `Eres Especialista Senior en Inteligencia de Repuestos OEM y Analista de EPC (Catálogos Electrónicos de Partes).
-Objetivo: Identificación inequívoca de componentes para CHILE, evitando devoluciones comerciales.
+        const question = `Actúa como Especialista Senior en Inteligencia de Repuestos y Analista de EPC con enfoque exclusivo en el mercado chileno.
+Misión: Identificación técnica inequívoca de componentes para evitar devoluciones comerciales.
 
-DATOS DEL VEHÍCULO:
-${contexto}
+VIN: ${vin}
+Componente: INYECTOR DIESEL
+Mercado: CHILE
+${marca ? `Marca: ${marca}` : ''}
+${modelo ? `Modelo: ${modelo}` : ''}
+${año ? `Año: ${año}` : ''}
 
-PROTOCOLO DE ANÁLISIS:
-1. DECODIFICACIÓN VIN: Analiza WMI, VDS, VIS. Identifica planta de ensamblaje y año real.
-2. FILTRO REGIONAL CRÍTICO: Mercado destino = CHILE. Valida especificaciones locales que alteran el SKU.
-3. VALIDACIÓN EMISIONES: Determina estándar de emisiones (Euro 3, 4, 5, 6) mediante el código de motor del VIN.
-4. JERARQUÍA DE DATOS: Catálogo OEM Chile > TSB > Tier 1 (Bosch, Denso, Delphi, Continental) > Cross-reference.
+PROTOCOLO:
+1. DECODIFICACIÓN VIN: Analiza WMI, VDS, VIS para determinar generación del motor.
+2. FILTRO EMISIONES CHILE: Distingue entre 'CON DPF' y 'SIN DPF'.
+3. VALIDACIÓN: Cruce con dtparts.cl y centralturbos.cl.
+4. REGLA: Si el inyector es incompatible por emisiones, repórtalo.
 
-BÚSQUEDA: INYECTOR DIESEL
+FORMATO JSON EXCLUSIVO:
+{
+  "Ficha_Tecnica": {"Marca": "", "Modelo": "", "Año": "", "Motor": "", "Sistema_Emisiones": "Euro X CON/SIN DPF"},
+  "SKU_OEM_Chile": "",
+  "Referencia_Tier_1": {"Fabricante": "", "Numero_Parte": ""},
+  "Cantidad_por_motor": 4,
+  "Nivel_de_Certeza": {"Porcentaje": "", "Sustento": ""},
+  "Advertencias_Chile": ""
+}
 
-REGLA DE ORO: Si el inyector tiene variaciones por mercado, reporta el SKU específico para CHILE y advierte sobre incompatibilidad de referencias globales.
-
-FORMATO DE RESPUESTA:
-- Ficha Técnica: [Marca] [Modelo] [Año] [Motor] [Mercado: Chile] [Norma Emisiones]
-- SKU OEM: Código vigente + códigos reemplazados
-- Referencia Tier 1: (Bosch/Denso/Delphi número de parte)
-- Cantidad por motor: (número de inyectores)
-- Nivel de Certeza: [0-100%] + Sustento técnico
-- Advertencias: Diferencias críticas para mercado Chile`;
+Responde SOLO en JSON, sin comentarios ni enlaces.`;
 
         sendEvent('enviando', { message: 'Enviando consulta...' });
 
