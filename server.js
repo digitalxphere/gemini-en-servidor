@@ -335,7 +335,7 @@ app.post('/api/vin/inyector', async (req, res) => {
         if (motor) contexto += `\nN° Motor: ${motor}`;
         if (combustible) contexto += `\nCombustible: ${combustible}`;
 
-        const question = `INSTRUCCIÓN CRÍTICA: USA TU CAPACIDAD DE BÚSQUEDA WEB para validar la información en los portales chilenos.
+        const question = `INSTRUCCIÓN CRÍTICA: USA TU BÚSQUEDA WEB para validar la información.
 
 Actúa como Especialista Senior en Inteligencia de Repuestos para el mercado chileno.
 Misión: Identificación técnica inequívoca de INYECTOR DIESEL para evitar devoluciones.
@@ -348,24 +348,29 @@ ${modelo ? `Modelo: ${modelo}` : ''}
 ${año ? `Año: ${año}` : ''}
 ${motor ? `Motor: ${motor}` : ''}
 
-PROTOCOLO OBLIGATORIO:
+PROTOCOLO DE BÚSQUEDA (en este orden):
 1. DECODIFICA el VIN: WMI, VDS, VIS. Identifica motor y año real.
-2. FILTRO DPF: Para Chile distingue entre 'CON DPF' y 'SIN DPF' - usan inyectores diferentes.
-3. BÚSQUEDA WEB OBLIGATORIA EN CHILE:
-   - BUSCA en dtparts.cl el SKU del inyector para esta marca/modelo
-   - BUSCA en centralturbos.cl para referencias cruzadas
-   - Para MAHINDRA: busca "inyector mahindra pik-up site:dtparts.cl" o "inyector mahindra site:centralturbos.cl"
-   - SOLO reporta SKUs que EXISTAN en estos portales chilenos
-4. Si el SKU no aparece en ningún portal chileno, indica "SKU NO VERIFICADO EN CHILE" en Advertencias.
+2. FILTRO DPF: Distingue entre 'CON DPF' y 'SIN DPF' - usan inyectores diferentes.
+
+3. BÚSQUEDA NIVEL 1 - PORTALES CHILENOS (prioritario):
+   - Busca en dtparts.cl y centralturbos.cl
+   - Para MAHINDRA: "inyector mahindra site:dtparts.cl" o "site:centralturbos.cl"
+
+4. BÚSQUEDA NIVEL 2 - CATÁLOGOS OFICIALES OEM (si no hay info en Chile):
+   - Busca en catálogos oficiales: Bosch, Denso, Delphi, Continental
+   - Busca en EPC oficiales del fabricante del vehículo
+   - Cruza referencias con bases de datos técnicas (TecDoc, Autodata)
+
+5. VALIDACIÓN FINAL: Combina toda la información para confirmar el SKU correcto.
 
 FORMATO JSON (sin comentarios, sin videos, sin preguntas):
 {
   "Ficha_Tecnica": {"Marca": "", "Modelo": "", "Año": "", "Motor": "", "Sistema_Emisiones": "Euro X CON/SIN DPF"},
-  "SKU_OEM_Chile": "Código encontrado en dtparts.cl o centralturbos.cl",
-  "Fuente_Validacion": "dtparts.cl / centralturbos.cl / NO VERIFICADO",
+  "SKU_OEM_Chile": "Código verificado",
+  "Fuente_Validacion": "dtparts.cl / centralturbos.cl / Catálogo OEM / TecDoc",
   "Referencia_Tier_1": {"Fabricante": "Bosch/Denso/Delphi", "Numero_Parte": ""},
   "Cantidad_por_motor": 4,
-  "Nivel_de_Certeza": {"Porcentaje": "0-100%", "Sustento": "verificado en portal X"},
+  "Nivel_de_Certeza": {"Porcentaje": "0-100%", "Sustento": "fuentes consultadas"},
   "Advertencias_Chile": ""
 }`;
 
@@ -400,7 +405,7 @@ app.post('/api/vin/turbo', async (req, res) => {
         if (motor) contexto += `\nN° Motor: ${motor}`;
         if (combustible) contexto += `\nCombustible: ${combustible}`;
 
-        const question = `INSTRUCCIÓN CRÍTICA: USA TU CAPACIDAD DE BÚSQUEDA WEB para validar la información en los portales chilenos.
+        const question = `INSTRUCCIÓN CRÍTICA: USA TU BÚSQUEDA WEB para validar la información.
 
 Actúa como Especialista Senior en Inteligencia de Repuestos para el mercado chileno.
 Misión: Identificación técnica inequívoca de TURBOCOMPRESOR para evitar devoluciones.
@@ -413,24 +418,29 @@ ${modelo ? `Modelo: ${modelo}` : ''}
 ${año ? `Año: ${año}` : ''}
 ${motor ? `Motor: ${motor}` : ''}
 
-PROTOCOLO OBLIGATORIO:
+PROTOCOLO DE BÚSQUEDA (en este orden):
 1. DECODIFICA el VIN: WMI, VDS, VIS. Identifica motor y año real.
-2. FILTRO DPF: Para Chile distingue entre 'CON DPF' y 'SIN DPF' - usan turbos con actuadores diferentes.
-3. BÚSQUEDA WEB OBLIGATORIA EN CHILE:
-   - BUSCA en centralturbos.cl el SKU del turbo para esta marca/modelo
-   - BUSCA en dtparts.cl para referencias cruzadas
-   - Para MAHINDRA: busca "turbo mahindra pik-up site:centralturbos.cl" o "turbo mahindra site:dtparts.cl"
-   - SOLO reporta SKUs que EXISTAN en estos portales chilenos
-4. Si el SKU no aparece en ningún portal chileno, indica "SKU NO VERIFICADO EN CHILE" en Advertencias.
+2. FILTRO DPF: Distingue entre 'CON DPF' y 'SIN DPF' - usan turbos con actuadores diferentes.
+
+3. BÚSQUEDA NIVEL 1 - PORTALES CHILENOS (prioritario):
+   - Busca en centralturbos.cl y dtparts.cl
+   - Para MAHINDRA: "turbo mahindra site:centralturbos.cl" o "site:dtparts.cl"
+
+4. BÚSQUEDA NIVEL 2 - CATÁLOGOS OFICIALES OEM (si no hay info en Chile):
+   - Busca en catálogos oficiales: Garrett, BorgWarner, MHI, IHI, Holset
+   - Busca en EPC oficiales del fabricante del vehículo
+   - Cruza referencias con bases de datos técnicas (TecDoc, Autodata)
+
+5. VALIDACIÓN FINAL: Combina toda la información para confirmar el SKU correcto.
 
 FORMATO JSON (sin comentarios, sin videos, sin preguntas):
 {
   "Ficha_Tecnica": {"Marca": "", "Modelo": "", "Año": "", "Motor": "", "Sistema_Emisiones": "Euro X CON/SIN DPF"},
-  "SKU_OEM_Chile": "Código encontrado en centralturbos.cl o dtparts.cl",
-  "Fuente_Validacion": "centralturbos.cl / dtparts.cl / NO VERIFICADO",
+  "SKU_OEM_Chile": "Código verificado",
+  "Fuente_Validacion": "centralturbos.cl / dtparts.cl / Catálogo OEM / TecDoc",
   "Referencia_Tier_1": {"Fabricante": "Garrett/BorgWarner/MHI", "Numero_Parte": ""},
   "Tipo_Turbo": "VGT/Wastegate/Twin-scroll",
-  "Nivel_de_Certeza": {"Porcentaje": "0-100%", "Sustento": "verificado en portal X"},
+  "Nivel_de_Certeza": {"Porcentaje": "0-100%", "Sustento": "fuentes consultadas"},
   "Advertencias_Chile": ""
 }`;
 
@@ -487,7 +497,7 @@ app.post('/api/vin/turbo/stream', async (req, res) => {
         if (motor) contexto += `\nN° Motor: ${motor}`;
         if (combustible) contexto += `\nCombustible: ${combustible}`;
 
-        const question = `INSTRUCCIÓN CRÍTICA: USA TU BÚSQUEDA WEB para validar en portales chilenos.
+        const question = `USA TU BÚSQUEDA WEB para validar la información.
 
 VIN: ${vin}
 Componente: TURBOCOMPRESOR
@@ -497,19 +507,16 @@ ${modelo ? `Modelo: ${modelo}` : ''}
 ${año ? `Año: ${año}` : ''}
 
 PROTOCOLO:
-1. Decodifica VIN (WMI, VDS, VIS).
-2. Filtro DPF: 'CON DPF' vs 'SIN DPF'.
-3. BÚSQUEDA WEB OBLIGATORIA:
-   - Busca en centralturbos.cl y dtparts.cl
-   - Para MAHINDRA: "turbo mahindra site:centralturbos.cl"
-   - SOLO reporta SKUs verificados en Chile
-4. Si no encuentras en portales chilenos, indica "NO VERIFICADO".
+1. Decodifica VIN. Filtro DPF.
+2. NIVEL 1 - PORTALES CHILE: centralturbos.cl, dtparts.cl
+3. NIVEL 2 - CATÁLOGOS OEM: Garrett, BorgWarner, MHI + TecDoc
+4. Combina toda la información para confirmar SKU.
 
-JSON (sin comentarios):
+JSON:
 {
   "Ficha_Tecnica": {"Marca": "", "Modelo": "", "Año": "", "Motor": "", "Sistema_Emisiones": ""},
   "SKU_OEM_Chile": "",
-  "Fuente_Validacion": "centralturbos.cl / NO VERIFICADO",
+  "Fuente_Validacion": "portal Chile / Catálogo OEM",
   "Referencia_Tier_1": {"Fabricante": "", "Numero_Parte": ""},
   "Tipo_Turbo": "",
   "Nivel_de_Certeza": {"Porcentaje": "", "Sustento": ""},
@@ -652,19 +659,16 @@ ${modelo ? `Modelo: ${modelo}` : ''}
 ${año ? `Año: ${año}` : ''}
 
 PROTOCOLO:
-1. Decodifica VIN (WMI, VDS, VIS).
-2. Filtro DPF: 'CON DPF' vs 'SIN DPF'.
-3. BÚSQUEDA WEB OBLIGATORIA:
-   - Busca en dtparts.cl y centralturbos.cl
-   - Para MAHINDRA: "inyector mahindra site:dtparts.cl"
-   - SOLO reporta SKUs verificados en Chile
-4. Si no encuentras en portales chilenos, indica "NO VERIFICADO".
+1. Decodifica VIN. Filtro DPF.
+2. NIVEL 1 - PORTALES CHILE: dtparts.cl, centralturbos.cl
+3. NIVEL 2 - CATÁLOGOS OEM: Bosch, Denso, Delphi + TecDoc
+4. Combina toda la información para confirmar SKU.
 
-JSON (sin comentarios):
+JSON:
 {
   "Ficha_Tecnica": {"Marca": "", "Modelo": "", "Año": "", "Motor": "", "Sistema_Emisiones": ""},
   "SKU_OEM_Chile": "",
-  "Fuente_Validacion": "dtparts.cl / NO VERIFICADO",
+  "Fuente_Validacion": "portal Chile / Catálogo OEM",
   "Referencia_Tier_1": {"Fabricante": "", "Numero_Parte": ""},
   "Cantidad_por_motor": 4,
   "Nivel_de_Certeza": {"Porcentaje": "", "Sustento": ""},
