@@ -335,44 +335,26 @@ app.post('/api/vin/inyector', async (req, res) => {
         if (motor) contexto += `\nN° Motor: ${motor}`;
         if (combustible) contexto += `\nCombustible: ${combustible}`;
 
-        const question = `INSTRUCCIÓN CRÍTICA: USA TU BÚSQUEDA WEB para validar la información.
+        const question = `USA TU BÚSQUEDA WEB. Actúa como Especialista Senior en Repuestos OEM para Chile.
+VIN: ${vin} | Componente: INYECTOR DIESEL | Mercado: CHILE
+${marca ? `Marca: ${marca}` : ''}${modelo ? ` | Modelo: ${modelo}` : ''}${año ? ` | Año: ${año}` : ''}${motor ? ` | Motor: ${motor}` : ''}
 
-Actúa como Especialista Senior en Inteligencia de Repuestos para el mercado chileno.
-Misión: Identificación técnica inequívoca de INYECTOR DIESEL para evitar devoluciones.
+PASO 1 - DECODIFICACIÓN VIN OBLIGATORIA:
+- WMI (Dígitos 1-3): Fabricante y país. MA1 = Mahindra India.
+- VDS (Dígitos 4-9): Modelo, carrocería, motor. Ej: TM4HG = Pik-Up mHawk 2.2L
+- VIS (Dígitos 10-17): Dígito 10 = AÑO MODELO. Tabla: A=2010, B=2011, C=2012, D=2013, E=2014, F=2015, G=2016, H=2017, J=2018, K=2019, L=2020, M=2021, N=2022, P=2023, R=2024
+- IMPORTANTE: Identifica el dígito 10 del VIN para determinar el año EXACTO.
 
-VIN: ${vin}
-Componente: INYECTOR DIESEL
-Mercado: CHILE
-${marca ? `Marca: ${marca}` : ''}
-${modelo ? `Modelo: ${modelo}` : ''}
-${año ? `Año: ${año}` : ''}
-${motor ? `Motor: ${motor}` : ''}
+PASO 2 - FILTRO EMISIONES CHILE:
+- Distingue 'CON DPF' (Euro 5/6, post-2015) vs 'SIN DPF' (Euro 4, pre-2015).
+- Usan inyectores con caudales y códigos IMA distintos.
 
-PROTOCOLO DE BÚSQUEDA (en este orden):
-1. DECODIFICA el VIN: WMI, VDS, VIS. Identifica motor y año real.
-2. FILTRO DPF: Distingue entre 'CON DPF' y 'SIN DPF' - usan inyectores diferentes.
+PASO 3 - BÚSQUEDA WEB:
+- NIVEL 1: Busca en dtparts.cl y centralturbos.cl
+- NIVEL 2: Catálogos Bosch, Denso, Delphi + TecDoc
 
-3. BÚSQUEDA NIVEL 1 - PORTALES CHILENOS (prioritario):
-   - Busca en dtparts.cl y centralturbos.cl
-   - Para MAHINDRA: "inyector mahindra site:dtparts.cl" o "site:centralturbos.cl"
-
-4. BÚSQUEDA NIVEL 2 - CATÁLOGOS OFICIALES OEM (si no hay info en Chile):
-   - Busca en catálogos oficiales: Bosch, Denso, Delphi, Continental
-   - Busca en EPC oficiales del fabricante del vehículo
-   - Cruza referencias con bases de datos técnicas (TecDoc, Autodata)
-
-5. VALIDACIÓN FINAL: Combina toda la información para confirmar el SKU correcto.
-
-FORMATO JSON (sin comentarios, sin videos, sin preguntas):
-{
-  "Ficha_Tecnica": {"Marca": "", "Modelo": "", "Año": "", "Motor": "", "Sistema_Emisiones": "Euro X CON/SIN DPF"},
-  "SKU_OEM_Chile": "Código verificado",
-  "Fuente_Validacion": "dtparts.cl / centralturbos.cl / Catálogo OEM / TecDoc",
-  "Referencia_Tier_1": {"Fabricante": "Bosch/Denso/Delphi", "Numero_Parte": ""},
-  "Cantidad_por_motor": 4,
-  "Nivel_de_Certeza": {"Porcentaje": "0-100%", "Sustento": "fuentes consultadas"},
-  "Advertencias_Chile": ""
-}`;
+FORMATO JSON:
+{"Ficha_Tecnica":{"Marca":"","Modelo":"","Año":"(del dígito 10 VIN)","Motor":"","Sistema_Emisiones":"Euro X CON/SIN DPF"},"SKU_OEM_Chile":"","Fuente_Validacion":"","Referencia_Tier_1":{"Fabricante":"","Numero_Parte":""},"Cantidad_por_motor":4,"Nivel_de_Certeza":{"Porcentaje":"","Sustento":""},"Advertencias_Chile":""}`;
 
         console.log(`🔍 Buscando INYECTOR para: ${marca || ''} ${modelo || ''} (${vin})`);
         const answer = await askGemini(question);
@@ -405,44 +387,26 @@ app.post('/api/vin/turbo', async (req, res) => {
         if (motor) contexto += `\nN° Motor: ${motor}`;
         if (combustible) contexto += `\nCombustible: ${combustible}`;
 
-        const question = `INSTRUCCIÓN CRÍTICA: USA TU BÚSQUEDA WEB para validar la información.
+        const question = `USA TU BÚSQUEDA WEB. Actúa como Especialista Senior en Repuestos OEM para Chile.
+VIN: ${vin} | Componente: TURBOCOMPRESOR | Mercado: CHILE
+${marca ? `Marca: ${marca}` : ''}${modelo ? ` | Modelo: ${modelo}` : ''}${año ? ` | Año: ${año}` : ''}${motor ? ` | Motor: ${motor}` : ''}
 
-Actúa como Especialista Senior en Inteligencia de Repuestos para el mercado chileno.
-Misión: Identificación técnica inequívoca de TURBOCOMPRESOR para evitar devoluciones.
+PASO 1 - DECODIFICACIÓN VIN OBLIGATORIA:
+- WMI (Dígitos 1-3): Fabricante y país. MA1 = Mahindra India.
+- VDS (Dígitos 4-9): Modelo, carrocería, motor. Ej: TM4HG = Pik-Up mHawk 2.2L
+- VIS (Dígitos 10-17): Dígito 10 = AÑO MODELO. Tabla: A=2010, B=2011, C=2012, D=2013, E=2014, F=2015, G=2016, H=2017, J=2018, K=2019, L=2020, M=2021, N=2022, P=2023, R=2024
+- IMPORTANTE: Identifica el dígito 10 del VIN para determinar el año EXACTO.
 
-VIN: ${vin}
-Componente: TURBOCOMPRESOR
-Mercado: CHILE
-${marca ? `Marca: ${marca}` : ''}
-${modelo ? `Modelo: ${modelo}` : ''}
-${año ? `Año: ${año}` : ''}
-${motor ? `Motor: ${motor}` : ''}
+PASO 2 - FILTRO EMISIONES CHILE:
+- Distingue 'CON DPF' (Euro 5/6, post-2015) vs 'SIN DPF' (Euro 4, pre-2015).
+- Usan turbos con actuadores diferentes.
 
-PROTOCOLO DE BÚSQUEDA (en este orden):
-1. DECODIFICA el VIN: WMI, VDS, VIS. Identifica motor y año real.
-2. FILTRO DPF: Distingue entre 'CON DPF' y 'SIN DPF' - usan turbos con actuadores diferentes.
+PASO 3 - BÚSQUEDA WEB:
+- NIVEL 1: Busca en centralturbos.cl y dtparts.cl
+- NIVEL 2: Catálogos Garrett, BorgWarner, MHI + TecDoc
 
-3. BÚSQUEDA NIVEL 1 - PORTALES CHILENOS (prioritario):
-   - Busca en centralturbos.cl y dtparts.cl
-   - Para MAHINDRA: "turbo mahindra site:centralturbos.cl" o "site:dtparts.cl"
-
-4. BÚSQUEDA NIVEL 2 - CATÁLOGOS OFICIALES OEM (si no hay info en Chile):
-   - Busca en catálogos oficiales: Garrett, BorgWarner, MHI, IHI, Holset
-   - Busca en EPC oficiales del fabricante del vehículo
-   - Cruza referencias con bases de datos técnicas (TecDoc, Autodata)
-
-5. VALIDACIÓN FINAL: Combina toda la información para confirmar el SKU correcto.
-
-FORMATO JSON (sin comentarios, sin videos, sin preguntas):
-{
-  "Ficha_Tecnica": {"Marca": "", "Modelo": "", "Año": "", "Motor": "", "Sistema_Emisiones": "Euro X CON/SIN DPF"},
-  "SKU_OEM_Chile": "Código verificado",
-  "Fuente_Validacion": "centralturbos.cl / dtparts.cl / Catálogo OEM / TecDoc",
-  "Referencia_Tier_1": {"Fabricante": "Garrett/BorgWarner/MHI", "Numero_Parte": ""},
-  "Tipo_Turbo": "VGT/Wastegate/Twin-scroll",
-  "Nivel_de_Certeza": {"Porcentaje": "0-100%", "Sustento": "fuentes consultadas"},
-  "Advertencias_Chile": ""
-}`;
+FORMATO JSON:
+{"Ficha_Tecnica":{"Marca":"","Modelo":"","Año":"(del dígito 10 VIN)","Motor":"","Sistema_Emisiones":"Euro X CON/SIN DPF"},"SKU_OEM_Chile":"","Fuente_Validacion":"","Referencia_Tier_1":{"Fabricante":"","Numero_Parte":""},"Tipo_Turbo":"VGT/Wastegate","Nivel_de_Certeza":{"Porcentaje":"","Sustento":""},"Advertencias_Chile":""}`;
 
         console.log(`🔍 Buscando TURBO para: ${marca || ''} ${modelo || ''} (${vin})`);
         const answer = await askGemini(question);
@@ -497,31 +461,14 @@ app.post('/api/vin/turbo/stream', async (req, res) => {
         if (motor) contexto += `\nN° Motor: ${motor}`;
         if (combustible) contexto += `\nCombustible: ${combustible}`;
 
-        const question = `USA TU BÚSQUEDA WEB para validar la información.
+        const question = `USA TU BÚSQUEDA WEB. VIN: ${vin} | TURBOCOMPRESOR | CHILE
+${marca ? `${marca}` : ''}${modelo ? ` ${modelo}` : ''}${año ? ` ${año}` : ''}
 
-VIN: ${vin}
-Componente: TURBOCOMPRESOR
-Mercado: CHILE
-${marca ? `Marca: ${marca}` : ''}
-${modelo ? `Modelo: ${modelo}` : ''}
-${año ? `Año: ${año}` : ''}
+DECODIFICACIÓN VIN: Dígito 10 = AÑO. Tabla: A=2010, B=2011, C=2012, D=2013, E=2014, F=2015, G=2016, H=2017, J=2018, K=2019, L=2020, M=2021, N=2022, P=2023
+FILTRO: CON DPF (Euro5/6 post-2015) vs SIN DPF (Euro4 pre-2015)
+BUSCAR: centralturbos.cl, dtparts.cl + Garrett/BorgWarner + TecDoc
 
-PROTOCOLO:
-1. Decodifica VIN. Filtro DPF.
-2. NIVEL 1 - PORTALES CHILE: centralturbos.cl, dtparts.cl
-3. NIVEL 2 - CATÁLOGOS OEM: Garrett, BorgWarner, MHI + TecDoc
-4. Combina toda la información para confirmar SKU.
-
-JSON:
-{
-  "Ficha_Tecnica": {"Marca": "", "Modelo": "", "Año": "", "Motor": "", "Sistema_Emisiones": ""},
-  "SKU_OEM_Chile": "",
-  "Fuente_Validacion": "portal Chile / Catálogo OEM",
-  "Referencia_Tier_1": {"Fabricante": "", "Numero_Parte": ""},
-  "Tipo_Turbo": "",
-  "Nivel_de_Certeza": {"Porcentaje": "", "Sustento": ""},
-  "Advertencias_Chile": ""
-}`;
+JSON: {"Ficha_Tecnica":{"Marca":"","Modelo":"","Año":"(dígito 10)","Motor":"","Sistema_Emisiones":""},"SKU_OEM_Chile":"","Fuente_Validacion":"","Referencia_Tier_1":{"Fabricante":"","Numero_Parte":""},"Tipo_Turbo":"","Nivel_de_Certeza":{"Porcentaje":"","Sustento":""},"Advertencias_Chile":""}`;
 
         sendEvent('enviando', { message: 'Enviando consulta...' });
 
@@ -649,31 +596,14 @@ app.post('/api/vin/inyector/stream', async (req, res) => {
         if (motor) contexto += `\nN° Motor: ${motor}`;
         if (combustible) contexto += `\nCombustible: ${combustible}`;
 
-        const question = `INSTRUCCIÓN CRÍTICA: USA TU BÚSQUEDA WEB para validar en portales chilenos.
+        const question = `USA TU BÚSQUEDA WEB. VIN: ${vin} | INYECTOR DIESEL | CHILE
+${marca ? `${marca}` : ''}${modelo ? ` ${modelo}` : ''}${año ? ` ${año}` : ''}
 
-VIN: ${vin}
-Componente: INYECTOR DIESEL
-Mercado: CHILE
-${marca ? `Marca: ${marca}` : ''}
-${modelo ? `Modelo: ${modelo}` : ''}
-${año ? `Año: ${año}` : ''}
+DECODIFICACIÓN VIN: Dígito 10 = AÑO. Tabla: A=2010, B=2011, C=2012, D=2013, E=2014, F=2015, G=2016, H=2017, J=2018, K=2019, L=2020, M=2021, N=2022, P=2023
+FILTRO: CON DPF (Euro5/6 post-2015) vs SIN DPF (Euro4 pre-2015)
+BUSCAR: dtparts.cl, centralturbos.cl + Bosch/Denso/Delphi + TecDoc
 
-PROTOCOLO:
-1. Decodifica VIN. Filtro DPF.
-2. NIVEL 1 - PORTALES CHILE: dtparts.cl, centralturbos.cl
-3. NIVEL 2 - CATÁLOGOS OEM: Bosch, Denso, Delphi + TecDoc
-4. Combina toda la información para confirmar SKU.
-
-JSON:
-{
-  "Ficha_Tecnica": {"Marca": "", "Modelo": "", "Año": "", "Motor": "", "Sistema_Emisiones": ""},
-  "SKU_OEM_Chile": "",
-  "Fuente_Validacion": "portal Chile / Catálogo OEM",
-  "Referencia_Tier_1": {"Fabricante": "", "Numero_Parte": ""},
-  "Cantidad_por_motor": 4,
-  "Nivel_de_Certeza": {"Porcentaje": "", "Sustento": ""},
-  "Advertencias_Chile": ""
-}`;
+JSON: {"Ficha_Tecnica":{"Marca":"","Modelo":"","Año":"(dígito 10)","Motor":"","Sistema_Emisiones":""},"SKU_OEM_Chile":"","Fuente_Validacion":"","Referencia_Tier_1":{"Fabricante":"","Numero_Parte":""},"Cantidad_por_motor":4,"Nivel_de_Certeza":{"Porcentaje":"","Sustento":""},"Advertencias_Chile":""}`;
 
         sendEvent('enviando', { message: 'Enviando consulta...' });
 
