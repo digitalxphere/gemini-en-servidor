@@ -412,6 +412,256 @@ app.get('/api/health', (req, res) => {
     res.json({ status: isReady ? 'ok' : 'initializing', browserReady: isReady, error: lastError });
 });
 
+// Endpoint SSE para TURBO con streaming de progreso
+app.post('/api/vin/turbo/stream', async (req, res) => {
+    // Configurar SSE
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
+    const sendEvent = (status, data = {}) => {
+        res.write(`data: ${JSON.stringify({ status, ...data })}\n\n`);
+    };
+
+    try {
+        const { vin, marca, modelo, version, año, motor, combustible } = req.body;
+        if (!vin) {
+            sendEvent('error', { error: 'VIN requerido' });
+            return res.end();
+        }
+        if (!isReady) {
+            sendEvent('error', { error: 'Servidor no listo' });
+            return res.end();
+        }
+
+        sendEvent('conectando', { message: 'Conectando con Gemini...' });
+
+        // Construir contexto
+        let contexto = `VIN: ${vin}`;
+        if (marca) contexto += `\nMarca: ${marca}`;
+        if (modelo) contexto += `\nModelo: ${modelo}`;
+        if (version) contexto += `\nVersión: ${version}`;
+        if (año) contexto += `\nAño: ${año}`;
+        if (motor) contexto += `\nN° Motor: ${motor}`;
+        if (combustible) contexto += `\nCombustible: ${combustible}`;
+
+        const question = `Eres experto en identificar repuestos de autopartes.
+
+Tengo este vehículo:
+${contexto}
+
+Dame el SKU del TURBOCOMPRESOR:
+- Código OEM del fabricante
+- Número de parte del proveedor
+- Porcentaje de seguridad (0-100%)
+- Comentario breve sobre la búsqueda
+
+Responde de forma breve y directa.`;
+
+        sendEvent('enviando', { message: 'Enviando consulta a Gemini...' });
+
+        // Navegar y enviar pregunta
+        await geminiPage.goto('https://gemini.google.com/app?hl=es', {
+            waitUntil: 'domcontentloaded',
+            timeout: 60000
+        });
+        await geminiPage.waitForTimeout(3000);
+
+        sendEvent('procesando', { message: 'Gemini está procesando...' });
+
+        // Cerrar popups
+        try {
+            await geminiPage.evaluate(() => {
+                const overlays = document.querySelectorAll('.cdk-overlay-container button, [aria-label="Close"], [aria-label="Cerrar"]');
+                overlays.forEach(btn => btn.click());
+            });
+        } catch (e) { }
+
+        // Enviar pregunta
+        const inputSelector = 'div[contenteditable="true"], textarea, p[data-placeholder]';
+        await geminiPage.waitForSelector(inputSelector, { timeout: 10000 });
+        await geminiPage.click(inputSelector, { force: true });
+        await geminiPage.evaluate((text) => {
+            const input = document.querySelector('div[contenteditable="true"], textarea, p[data-placeholder]');
+            if (input) {
+                input.focus();
+                input.textContent = text;
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }, question);
+        await geminiPage.keyboard.press('Enter');
+
+        sendEvent('razonando', { message: 'Gemini está analizando el VIN...' });
+
+        // Esperar respuesta con polling
+        let attempts = 0;
+        while (attempts < 90) {
+            const isThinking = await geminiPage.evaluate(() => {
+                const text = document.body.innerText.toLowerCase();
+                return text.includes('pensando') || text.includes('razonando') ||
+                    text.includes('buscando') || text.includes('analizando');
+            });
+
+            if (!isThinking && attempts > 8) break;
+            await geminiPage.waitForTimeout(2000);
+            attempts++;
+
+            if (attempts % 5 === 0) {
+                sendEvent('razonando', { message: `Procesando... (${attempts * 2}s)` });
+            }
+        }
+
+        sendEvent('extrayendo', { message: 'Extrayendo respuesta...' });
+
+        // Extraer respuesta
+        await geminiPage.waitForTimeout(2000);
+        let response = await geminiPage.evaluate(() => {
+            const messages = document.querySelectorAll('[data-message-author-role="model"]');
+            if (messages.length > 0) {
+                return messages[messages.length - 1].innerText;
+            }
+            return null;
+        });
+
+        if (!response || response.length < 50) {
+            response = await geminiPage.evaluate(() => {
+                const mainArea = document.querySelector('main');
+                if (mainArea) {
+                    const text = mainArea.innerText;
+                    const markers = ['Código OEM', 'Motor:', 'Turbo', 'El turbo'];
+                    for (const m of markers) {
+                        const idx = text.indexOf(m);
+                        if (idx !== -1) return text.substring(idx, Math.min(idx + 2000, text.length));
+                    }
+                }
+                return 'No se pudo extraer la respuesta.';
+            });
+        }
+
+        sendEvent('completado', {
+            vin,
+            tipo: 'turbo',
+            answer: response,
+            source: 'Gemini Web (Deep Reasoning)'
+        });
+
+    } catch (error) {
+        sendEvent('error', { error: error.message });
+    }
+
+    res.end();
+});
+
+// Endpoint SSE para INYECTOR con streaming de progreso
+app.post('/api/vin/inyector/stream', async (req, res) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
+    const sendEvent = (status, data = {}) => {
+        res.write(`data: ${JSON.stringify({ status, ...data })}\n\n`);
+    };
+
+    try {
+        const { vin, marca, modelo, version, año, motor, combustible } = req.body;
+        if (!vin) {
+            sendEvent('error', { error: 'VIN requerido' });
+            return res.end();
+        }
+        if (!isReady) {
+            sendEvent('error', { error: 'Servidor no listo' });
+            return res.end();
+        }
+
+        sendEvent('conectando', { message: 'Conectando con Gemini...' });
+
+        let contexto = `VIN: ${vin}`;
+        if (marca) contexto += `\nMarca: ${marca}`;
+        if (modelo) contexto += `\nModelo: ${modelo}`;
+        if (version) contexto += `\nVersión: ${version}`;
+        if (año) contexto += `\nAño: ${año}`;
+        if (motor) contexto += `\nN° Motor: ${motor}`;
+        if (combustible) contexto += `\nCombustible: ${combustible}`;
+
+        const question = `Eres experto en identificar repuestos de autopartes.
+
+Tengo este vehículo:
+${contexto}
+
+Dame el SKU del INYECTOR DIESEL:
+- Código OEM del fabricante
+- Código del proveedor (Denso, Bosch, Delphi, etc.)
+- Cantidad por motor
+- Porcentaje de seguridad (0-100%)
+- Comentario breve sobre la búsqueda
+
+Responde de forma breve y directa.`;
+
+        sendEvent('enviando', { message: 'Enviando consulta...' });
+
+        await geminiPage.goto('https://gemini.google.com/app?hl=es', {
+            waitUntil: 'domcontentloaded',
+            timeout: 60000
+        });
+        await geminiPage.waitForTimeout(3000);
+
+        sendEvent('procesando', { message: 'Gemini está procesando...' });
+
+        const inputSelector = 'div[contenteditable="true"], textarea, p[data-placeholder]';
+        await geminiPage.waitForSelector(inputSelector, { timeout: 10000 });
+        await geminiPage.click(inputSelector, { force: true });
+        await geminiPage.evaluate((text) => {
+            const input = document.querySelector('div[contenteditable="true"], textarea, p[data-placeholder]');
+            if (input) {
+                input.focus();
+                input.textContent = text;
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+        }, question);
+        await geminiPage.keyboard.press('Enter');
+
+        sendEvent('razonando', { message: 'Analizando información del inyector...' });
+
+        let attempts = 0;
+        while (attempts < 90) {
+            const isThinking = await geminiPage.evaluate(() => {
+                const text = document.body.innerText.toLowerCase();
+                return text.includes('pensando') || text.includes('razonando');
+            });
+            if (!isThinking && attempts > 8) break;
+            await geminiPage.waitForTimeout(2000);
+            attempts++;
+        }
+
+        sendEvent('extrayendo', { message: 'Extrayendo respuesta...' });
+
+        await geminiPage.waitForTimeout(2000);
+        let response = await geminiPage.evaluate(() => {
+            const messages = document.querySelectorAll('[data-message-author-role="model"]');
+            if (messages.length > 0) return messages[messages.length - 1].innerText;
+            return null;
+        });
+
+        if (!response || response.length < 50) {
+            response = 'No se pudo extraer la respuesta.';
+        }
+
+        sendEvent('completado', {
+            vin,
+            tipo: 'inyector',
+            answer: response,
+            source: 'Gemini Web (Deep Reasoning)'
+        });
+
+    } catch (error) {
+        sendEvent('error', { error: error.message });
+    }
+
+    res.end();
+});
+
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
