@@ -265,15 +265,32 @@ Incluye marca, modelo del vehículo y norma de emisión.`;
 // Endpoint específico para INYECTOR
 app.post('/api/vin/inyector', async (req, res) => {
     try {
-        const { vin } = req.body;
+        const { vin, marca, modelo, version, año, motor, combustible } = req.body;
         if (!vin) return res.status(400).json({ error: 'VIN requerido' });
         if (!isReady) return res.status(503).json({ error: 'Servidor no listo', details: lastError });
 
-        const question = `Para el VIN ${vin}, identifica el motor exacto y dame el SKU del INYECTOR DIESEL.
-Incluye: código OEM, código Denso/Bosch, cantidad por motor.
+        // Construir contexto con la info disponible
+        let contexto = `VIN: ${vin}`;
+        if (marca) contexto += `\nMarca: ${marca}`;
+        if (modelo) contexto += `\nModelo: ${modelo}`;
+        if (version) contexto += `\nVersión: ${version}`;
+        if (año) contexto += `\nAño: ${año}`;
+        if (motor) contexto += `\nN° Motor: ${motor}`;
+        if (combustible) contexto += `\nCombustible: ${combustible}`;
+
+        const question = `Eres experto en identificar repuestos de autopartes.
+
+Tengo este vehículo:
+${contexto}
+
+Dame el SKU del INYECTOR DIESEL:
+- Código OEM del fabricante
+- Código del proveedor (Denso, Bosch, Delphi, etc.)
+- Cantidad por motor
+
 Responde de forma breve y directa.`;
 
-        console.log(`🔍 Buscando INYECTOR para VIN: ${vin}`);
+        console.log(`🔍 Buscando INYECTOR para: ${marca || ''} ${modelo || ''} (${vin})`);
         const answer = await askGemini(question);
         console.log(`✅ Respuesta inyector (${answer.length} chars)`);
 
@@ -291,15 +308,31 @@ Responde de forma breve y directa.`;
 // Endpoint específico para TURBO
 app.post('/api/vin/turbo', async (req, res) => {
     try {
-        const { vin } = req.body;
+        const { vin, marca, modelo, version, año, motor, combustible } = req.body;
         if (!vin) return res.status(400).json({ error: 'VIN requerido' });
         if (!isReady) return res.status(503).json({ error: 'Servidor no listo', details: lastError });
 
-        const question = `Para el VIN ${vin}, identifica el motor exacto y dame el SKU del TURBOCOMPRESOR.
-Incluye: código OEM, número de parte Garrett/BorgWarner/IHI.
+        // Construir contexto con la info disponible
+        let contexto = `VIN: ${vin}`;
+        if (marca) contexto += `\nMarca: ${marca}`;
+        if (modelo) contexto += `\nModelo: ${modelo}`;
+        if (version) contexto += `\nVersión: ${version}`;
+        if (año) contexto += `\nAño: ${año}`;
+        if (motor) contexto += `\nN° Motor: ${motor}`;
+        if (combustible) contexto += `\nCombustible: ${combustible}`;
+
+        const question = `Eres experto en identificar repuestos de autopartes.
+
+Tengo este vehículo:
+${contexto}
+
+Dame el SKU del TURBOCOMPRESOR:
+- Código OEM del fabricante
+- Número de parte del proveedor
+
 Responde de forma breve y directa.`;
 
-        console.log(`🔍 Buscando TURBO para VIN: ${vin}`);
+        console.log(`🔍 Buscando TURBO para: ${marca || ''} ${modelo || ''} (${vin})`);
         const answer = await askGemini(question);
         console.log(`✅ Respuesta turbo (${answer.length} chars)`);
 
