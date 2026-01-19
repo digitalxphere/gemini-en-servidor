@@ -335,19 +335,33 @@ app.post('/api/vin/inyector', async (req, res) => {
         if (motor) contexto += `\nN° Motor: ${motor}`;
         if (combustible) contexto += `\nCombustible: ${combustible}`;
 
-        const question = `Eres experto en identificar repuestos de autopartes.
+        const question = `Actúa como Especialista en Inteligencia de Repuestos OEM y Analista de Catálogos Electrónicos (EPC).
+Tu objetivo es la precisión absoluta para evitar devoluciones comerciales.
 
-Tengo este vehículo:
+DATOS DEL VEHÍCULO:
 ${contexto}
 
-Dame el SKU del INYECTOR DIESEL:
-- Código OEM del fabricante
-- Código del proveedor (Denso, Bosch, Delphi, etc.)
-- Cantidad por motor
-- Porcentaje de seguridad (0-100%)
-- Comentario breve sobre la búsqueda
+PROTOCOLO DE DECODIFICACIÓN VIN:
+1. WMI (Dígitos 1-3): Fabricante y país de origen
+2. VDS (Dígitos 4-9): Modelo, carrocería, transmisión y CÓDIGO DE MOTOR
+3. VIS (Dígitos 10-17): Año del modelo y planta de ensamblaje
 
-Responde de forma breve y directa.`;
+REGLA CRÍTICA: Si el código de motor detectado no coincide con un motor DIESEL, advierte al usuario.
+
+BÚSQUEDA: INYECTOR DIESEL
+
+JERARQUÍA DE FUENTES:
+1. Catálogos OEM Oficiales (Microcat, Partslink24, Mobis, Etka)
+2. Fabricantes Tier 1: Bosch, Denso, Delphi, Continental, Siemens VDO
+3. Cruce de referencias (Cross-Reference)
+
+FORMATO DE RESPUESTA:
+- Ficha del Vehículo: [Marca/Modelo] [Año] [Motor] [Mercado]
+- SKU OEM Primario: (código vigente del concesionario)
+- Sustituciones/Reemplazos: (si el código fue reemplazado)
+- Referencia Fabricante Tier 1: (Bosch/Denso/Delphi número de parte)
+- Cantidad por motor: (número de inyectores)
+- Nivel de Certeza: [0-100%] + Justificación técnica`;
 
         console.log(`🔍 Buscando INYECTOR para: ${marca || ''} ${modelo || ''} (${vin})`);
         const answer = await askGemini(question);
@@ -380,18 +394,33 @@ app.post('/api/vin/turbo', async (req, res) => {
         if (motor) contexto += `\nN° Motor: ${motor}`;
         if (combustible) contexto += `\nCombustible: ${combustible}`;
 
-        const question = `Eres experto en identificar repuestos de autopartes.
+        const question = `Actúa como Especialista en Inteligencia de Repuestos OEM y Analista de Catálogos Electrónicos (EPC).
+Tu objetivo es la precisión absoluta para evitar devoluciones comerciales.
 
-Tengo este vehículo:
+DATOS DEL VEHÍCULO:
 ${contexto}
 
-Dame el SKU del TURBOCOMPRESOR:
-- Código OEM del fabricante
-- Número de parte del proveedor
-- Porcentaje de seguridad (0-100%)
-- Comentario breve sobre la búsqueda
+PROTOCOLO DE DECODIFICACIÓN VIN:
+1. WMI (Dígitos 1-3): Fabricante y país de origen
+2. VDS (Dígitos 4-9): Modelo, carrocería, transmisión y CÓDIGO DE MOTOR
+3. VIS (Dígitos 10-17): Año del modelo y planta de ensamblaje
 
-Responde de forma breve y directa.`;
+REGLA CRÍTICA: Si el código de motor detectado no es TURBO (aspirado natural), advierte al usuario.
+
+BÚSQUEDA: TURBOCOMPRESOR
+
+JERARQUÍA DE FUENTES:
+1. Catálogos OEM Oficiales (Microcat, Partslink24, Mobis, Etka)
+2. Fabricantes Tier 1: Garrett, BorgWarner, MHI (Mitsubishi), IHI, Holset
+3. Cruce de referencias (Cross-Reference)
+
+FORMATO DE RESPUESTA:
+- Ficha del Vehículo: [Marca/Modelo] [Año] [Motor] [Mercado]
+- SKU OEM Primario: (código vigente del concesionario)
+- Sustituciones/Reemplazos: (si el código fue reemplazado)
+- Referencia Fabricante Tier 1: (Garrett/BorgWarner/MHI número de parte)
+- Tipo de turbo: (geometría variable VGT, wastegate, twin-scroll, etc.)
+- Nivel de Certeza: [0-100%] + Justificación técnica`;
 
         console.log(`🔍 Buscando TURBO para: ${marca || ''} ${modelo || ''} (${vin})`);
         const answer = await askGemini(question);
@@ -446,18 +475,33 @@ app.post('/api/vin/turbo/stream', async (req, res) => {
         if (motor) contexto += `\nN° Motor: ${motor}`;
         if (combustible) contexto += `\nCombustible: ${combustible}`;
 
-        const question = `Eres experto en identificar repuestos de autopartes.
+        const question = `Actúa como Especialista en Inteligencia de Repuestos OEM y Analista de Catálogos Electrónicos (EPC).
+Tu objetivo es la precisión absoluta para evitar devoluciones comerciales.
 
-Tengo este vehículo:
+DATOS DEL VEHÍCULO:
 ${contexto}
 
-Dame el SKU del TURBOCOMPRESOR:
-- Código OEM del fabricante
-- Número de parte del proveedor
-- Porcentaje de seguridad (0-100%)
-- Comentario breve sobre la búsqueda
+PROTOCOLO DE DECODIFICACIÓN VIN:
+1. WMI (Dígitos 1-3): Fabricante y país de origen
+2. VDS (Dígitos 4-9): Modelo, carrocería, transmisión y CÓDIGO DE MOTOR
+3. VIS (Dígitos 10-17): Año del modelo y planta de ensamblaje
 
-Responde de forma breve y directa.`;
+REGLA CRÍTICA: Si el código de motor detectado no es TURBO (aspirado natural), advierte al usuario.
+
+BÚSQUEDA: TURBOCOMPRESOR
+
+JERARQUÍA DE FUENTES:
+1. Catálogos OEM Oficiales (Microcat, Partslink24, Mobis, Etka)
+2. Fabricantes Tier 1: Garrett, BorgWarner, MHI (Mitsubishi), IHI, Holset
+3. Cruce de referencias (Cross-Reference)
+
+FORMATO DE RESPUESTA:
+- Ficha del Vehículo: [Marca/Modelo] [Año] [Motor] [Mercado]
+- SKU OEM Primario: (código vigente del concesionario)
+- Sustituciones/Reemplazos: (si el código fue reemplazado)
+- Referencia Fabricante Tier 1: (Garrett/BorgWarner/MHI número de parte)
+- Tipo de turbo: (geometría variable VGT, wastegate, twin-scroll, etc.)
+- Nivel de Certeza: [0-100%] + Justificación técnica`;
 
         sendEvent('enviando', { message: 'Enviando consulta...' });
 
@@ -585,19 +629,33 @@ app.post('/api/vin/inyector/stream', async (req, res) => {
         if (motor) contexto += `\nN° Motor: ${motor}`;
         if (combustible) contexto += `\nCombustible: ${combustible}`;
 
-        const question = `Eres experto en identificar repuestos de autopartes.
+        const question = `Actúa como Especialista en Inteligencia de Repuestos OEM y Analista de Catálogos Electrónicos (EPC).
+Tu objetivo es la precisión absoluta para evitar devoluciones comerciales.
 
-Tengo este vehículo:
+DATOS DEL VEHÍCULO:
 ${contexto}
 
-Dame el SKU del INYECTOR DIESEL:
-- Código OEM del fabricante
-- Código del proveedor (Denso, Bosch, Delphi, etc.)
-- Cantidad por motor
-- Porcentaje de seguridad (0-100%)
-- Comentario breve sobre la búsqueda
+PROTOCOLO DE DECODIFICACIÓN VIN:
+1. WMI (Dígitos 1-3): Fabricante y país de origen
+2. VDS (Dígitos 4-9): Modelo, carrocería, transmisión y CÓDIGO DE MOTOR
+3. VIS (Dígitos 10-17): Año del modelo y planta de ensamblaje
 
-Responde de forma breve y directa.`;
+REGLA CRÍTICA: Si el código de motor detectado no coincide con un motor DIESEL, advierte al usuario.
+
+BÚSQUEDA: INYECTOR DIESEL
+
+JERARQUÍA DE FUENTES:
+1. Catálogos OEM Oficiales (Microcat, Partslink24, Mobis, Etka)
+2. Fabricantes Tier 1: Bosch, Denso, Delphi, Continental, Siemens VDO
+3. Cruce de referencias (Cross-Reference)
+
+FORMATO DE RESPUESTA:
+- Ficha del Vehículo: [Marca/Modelo] [Año] [Motor] [Mercado]
+- SKU OEM Primario: (código vigente del concesionario)
+- Sustituciones/Reemplazos: (si el código fue reemplazado)
+- Referencia Fabricante Tier 1: (Bosch/Denso/Delphi número de parte)
+- Cantidad por motor: (número de inyectores)
+- Nivel de Certeza: [0-100%] + Justificación técnica`;
 
         sendEvent('enviando', { message: 'Enviando consulta...' });
 
