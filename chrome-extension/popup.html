@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Gemini VIN Bridge</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 350px;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            padding: 16px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            font-size: 24px;
+        }
+
+        .title {
+            font-size: 14px;
+            font-weight: 600;
+            background: linear-gradient(90deg, #4f8cff, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: #22c55e;
+            margin-left: auto;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #22c55e;
+            border-radius: 50%;
+        }
+
+        .info-box {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 12px;
+            font-size: 12px;
+        }
+
+        .info-box h3 {
+            font-size: 13px;
+            margin-bottom: 8px;
+            color: #4f8cff;
+        }
+
+        .code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px;
+            border-radius: 6px;
+            font-family: 'Consolas', monospace;
+            font-size: 10px;
+            overflow-x: auto;
+            white-space: pre;
+            color: #a0a0b8;
+        }
+
+        .extension-id {
+            background: rgba(79, 140, 255, 0.2);
+            border: 1px solid rgba(79, 140, 255, 0.4);
+            padding: 8px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 11px;
+            word-break: break-all;
+            margin-top: 8px;
+        }
+
+        .copy-btn {
+            background: #4f8cff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            color: white;
+            font-size: 11px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .copy-btn:hover {
+            background: #3d7be8;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <span class="logo">🔗</span>
+        <span class="title">Gemini VIN Bridge</span>
+        <div class="status">
+            <span class="status-dot"></span>
+            <span>Activo</span>
+        </div>
+    </div>
+
+    <div class="info-box">
+        <h3>📋 ID de la Extensión</h3>
+        <p style="font-size: 11px; color: #a0a0b8; margin-bottom: 8px;">
+            Usa este ID en MAI Smart para conectar:
+        </p>
+        <div class="extension-id" id="extensionId">Cargando...</div>
+        <button class="copy-btn" id="copyBtn">📋 Copiar ID</button>
+    </div>
+
+    <div class="info-box">
+        <h3>💻 Código para MAI Smart</h3>
+        <div class="code" id="codeExample">// Cargando...</div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>

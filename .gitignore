@@ -1,0 +1,10 @@
+# Ignorar archivos sensibles y de sistema
+node_modules/
+.env
+gemini-session/
+browser-session/
+*.log
+
+# Sistema
+.DS_Store
+Thumbs.db

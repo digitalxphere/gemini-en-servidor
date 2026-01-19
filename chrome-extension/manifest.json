@@ -1,0 +1,49 @@
+{
+    "manifest_version": 3,
+    "name": "Gemini VIN Bridge",
+    "version": "1.0",
+    "description": "Puente entre MAI Smart y Gemini para búsqueda de SKUs por VIN",
+    "permissions": [
+        "tabs",
+        "scripting",
+        "storage"
+    ],
+    "host_permissions": [
+        "https://gemini.google.com/*"
+    ],
+    "externally_connectable": {
+        "matches": [
+            "https://*.railway.app/*",
+            "https://*.vercel.app/*",
+            "http://localhost:*/*",
+            "https://localhost:*/*",
+            "*://*/*"
+        ]
+    },
+    "action": {
+        "default_popup": "popup.html",
+        "default_icon": {
+            "16": "icon16.png",
+            "48": "icon48.png",
+            "128": "icon128.png"
+        }
+    },
+    "icons": {
+        "16": "icon16.png",
+        "48": "icon48.png",
+        "128": "icon128.png"
+    },
+    "background": {
+        "service_worker": "background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "https://gemini.google.com/*"
+            ],
+            "js": [
+                "gemini-helper.js"
+            ]
+        }
+    ]
+}
