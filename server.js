@@ -435,7 +435,7 @@ app.post('/api/vin/turbo/stream', async (req, res) => {
             return res.end();
         }
 
-        sendEvent('conectando', { message: 'Conectando con Gemini...' });
+        sendEvent('conectando', { message: 'Conectando con MAI Autopartes...' });
 
         // Construir contexto
         let contexto = `VIN: ${vin}`;
@@ -459,7 +459,7 @@ Dame el SKU del TURBOCOMPRESOR:
 
 Responde de forma breve y directa.`;
 
-        sendEvent('enviando', { message: 'Enviando consulta a Gemini...' });
+        sendEvent('enviando', { message: 'Enviando consulta...' });
 
         // Navegar y enviar pregunta
         await geminiPage.goto('https://gemini.google.com/app?hl=es', {
@@ -468,7 +468,7 @@ Responde de forma breve y directa.`;
         });
         await geminiPage.waitForTimeout(3000);
 
-        sendEvent('procesando', { message: 'Gemini está procesando...' });
+        sendEvent('procesando', { message: 'MAI Autopartes está procesando...' });
 
         // Cerrar popups
         try {
@@ -492,7 +492,7 @@ Responde de forma breve y directa.`;
         }, question);
         await geminiPage.keyboard.press('Enter');
 
-        sendEvent('razonando', { message: 'Gemini está analizando el VIN...' });
+        sendEvent('razonando', { message: 'MAI Autopartes está analizando el VIN...' });
 
         // Esperar respuesta con polling
         let attempts = 0;
@@ -575,7 +575,7 @@ app.post('/api/vin/inyector/stream', async (req, res) => {
             return res.end();
         }
 
-        sendEvent('conectando', { message: 'Conectando con Gemini...' });
+        sendEvent('conectando', { message: 'Conectando con MAI Autopartes...' });
 
         let contexto = `VIN: ${vin}`;
         if (marca) contexto += `\nMarca: ${marca}`;
@@ -607,7 +607,7 @@ Responde de forma breve y directa.`;
         });
         await geminiPage.waitForTimeout(3000);
 
-        sendEvent('procesando', { message: 'Gemini está procesando...' });
+        sendEvent('procesando', { message: 'MAI Autopartes está procesando...' });
 
         const inputSelector = 'div[contenteditable="true"], textarea, p[data-placeholder]';
         await geminiPage.waitForSelector(inputSelector, { timeout: 10000 });
