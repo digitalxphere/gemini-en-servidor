@@ -174,3 +174,71 @@ console.log(inyector.respuesta);
 2. **Header requerido**: `ngrok-skip-browser-warning: true`
 3. **El Mac debe estar encendido** con el servidor corriendo
 4. **Mientras más datos envíes**, mejor será la respuesta
+
+---
+
+## Endpoints con Streaming (SSE)
+
+Para mostrar progreso en tiempo real, usa los endpoints SSE:
+
+### Endpoints disponibles
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| POST | `/api/vin/turbo/stream` | Turbo con progreso |
+| POST | `/api/vin/inyector/stream` | Inyector con progreso |
+
+### Estados de progreso enviados:
+- `conectando` - Conectando con Gemini
+- `enviando` - Enviando consulta
+- `procesando` - Gemini está procesando
+- `razonando` - Analizando el VIN (cada 10s)
+- `extrayendo` - Extrayendo respuesta
+- `completado` - Respuesta lista
+- `error` - Si algo falla
+
+### Ejemplo de uso en frontend (React/Next.js):
+
+```javascript
+async function buscarTurboConProgreso(vehiculo, onProgress) {
+  const response = await fetch(`${GEMINI_URL}/api/vin/turbo/stream`, {
+    method: 'POST',
+    headers: { 
+      'Content-Type': 'application/json',
+      'ngrok-skip-browser-warning': 'true'
+    },
+    body: JSON.stringify(vehiculo)
+  });
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    
+    const text = decoder.decode(value);
+    const lines = text.split('\n');
+    
+    for (const line of lines) {
+      if (line.startsWith('data: ')) {
+        const data = JSON.parse(line.slice(6));
+        onProgress(data);
+        
+        if (data.status === 'completado') {
+          return data; // Retorna la respuesta final
+        }
+      }
+    }
+  }
+}
+
+// Uso:
+buscarTurboConProgreso(vehiculo, (event) => {
+  console.log(event.status, event.message);
+  // Actualiza tu UI con el estado
+  setStatus(event.message || event.status);
+}).then(result => {
+  console.log('Respuesta:', result.answer);
+});
+```
