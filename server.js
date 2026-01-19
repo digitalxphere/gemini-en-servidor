@@ -124,10 +124,24 @@ async function askGemini(question) {
         });
         await geminiPage.waitForTimeout(3000);
 
+        // Cerrar popups que puedan estar bloqueando (email opt-in, bienvenida, etc.)
+        try {
+            await geminiPage.evaluate(() => {
+                // Buscar y cerrar cualquier overlay/popup
+                const overlays = document.querySelectorAll('.cdk-overlay-container button, [aria-label="Close"], [aria-label="Cerrar"], button:has-text("No"), button:has-text("Dismiss")');
+                overlays.forEach(btn => btn.click());
+
+                // Cerrar por clic en backdrop
+                const backdrops = document.querySelectorAll('.cdk-overlay-backdrop');
+                backdrops.forEach(b => b.click());
+            });
+            await geminiPage.waitForTimeout(500);
+        } catch (e) { /* ignorar */ }
+
         // Encontrar input
         const inputSelector = 'div[contenteditable="true"], textarea, p[data-placeholder]';
         await geminiPage.waitForSelector(inputSelector, { timeout: 10000 });
-        await geminiPage.click(inputSelector);
+        await geminiPage.click(inputSelector, { force: true }); // force: true ignora overlays
         await geminiPage.waitForTimeout(300);
 
         // Escribir pregunta
