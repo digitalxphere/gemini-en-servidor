@@ -194,23 +194,44 @@ async function askGemini(question) {
         // Esperar y extraer respuesta con polling hasta tener contenido real
         let response = null;
         let extractAttempts = 0;
-        const maxExtractAttempts = 30; // 60 segundos adicionales máximo
+        const maxExtractAttempts = 15; // 30 segundos máximo de extracción
 
         while (extractAttempts < maxExtractAttempts) {
+            // Verificar si Gemini sigue procesando
+            const isStillThinking = await geminiPage.evaluate(() => {
+                const text = document.body.innerText.toLowerCase();
+                return text.includes('pensando') ||
+                    text.includes('razonando') ||
+                    text.includes('buscando') ||
+                    text.includes('analizando');
+            });
+
+            // Intentar extraer respuesta
             response = await geminiPage.evaluate(() => {
-                // Selector principal
+                // Selector principal - mensajes del modelo
                 const messages = document.querySelectorAll('[data-message-author-role="model"]');
                 if (messages.length > 0) {
-                    const text = messages[messages.length - 1].innerText;
-                    // Solo devolver si tiene contenido significativo (más de 50 caracteres)
+                    const lastMessage = messages[messages.length - 1];
+                    const text = lastMessage.innerText;
                     if (text && text.length > 50) {
                         return text;
                     }
                 }
+
+                // Selector alternativo - contenedor de respuesta
+                const responseBlocks = document.querySelectorAll('.response-container, .model-response, [class*="response"]');
+                for (const block of responseBlocks) {
+                    const text = block.innerText;
+                    if (text && text.length > 100 && !text.includes('Nueva conversación')) {
+                        return text;
+                    }
+                }
+
                 return null;
             });
 
-            if (response && response.length > 50) {
+            // Si tiene respuesta significativa y ya no está pensando, salir
+            if (response && response.length > 50 && !isStillThinking) {
                 console.log(`   ✅ Respuesta extraída (${response.length} chars)`);
                 break;
             }
@@ -218,19 +239,30 @@ async function askGemini(question) {
             await geminiPage.waitForTimeout(2000);
             extractAttempts++;
 
-            if (extractAttempts % 5 === 0) {
-                console.log(`   ⏳ Esperando respuesta completa... (${extractAttempts * 2}s)`);
+            if (extractAttempts % 3 === 0) {
+                console.log(`   ⏳ Extrayendo... (${extractAttempts * 2}s) ${isStillThinking ? '- Procesando' : '- Buscando respuesta'}`);
             }
         }
 
-        // Si no encontró respuesta, intentar selectores alternativos
+        // Fallback - obtener contenido principal si no se encontró respuesta específica
         if (!response || response.length < 50) {
+            console.log('   ⚠️ Usando fallback de extracción');
             response = await geminiPage.evaluate(() => {
-                const mainContent = document.querySelector('main');
-                if (mainContent && mainContent.innerText.length > 200) {
-                    return mainContent.innerText;
+                // Buscar el main content area
+                const mainArea = document.querySelector('main') || document.querySelector('[role="main"]');
+                if (mainArea) {
+                    // Filtrar solo el contenido relevante
+                    const allText = mainArea.innerText;
+                    // Buscar desde "Ver razonamiento" o similar
+                    const startMarkers = ['Ver razonamiento', 'Basado en', 'El turbo', 'El inyector', 'Motor:', 'Código OEM'];
+                    for (const marker of startMarkers) {
+                        const idx = allText.indexOf(marker);
+                        if (idx !== -1) {
+                            return allText.substring(idx, Math.min(idx + 2000, allText.length));
+                        }
+                    }
                 }
-                return 'Gemini está procesando. Intenta de nuevo en unos segundos.';
+                return 'No se pudo extraer la respuesta. Verifica Gemini en el navegador.';
             });
         }
 
