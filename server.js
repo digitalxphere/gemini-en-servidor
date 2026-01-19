@@ -119,10 +119,10 @@ async function askGemini(question) {
     try {
         // Ir a nueva conversación
         await geminiPage.goto('https://gemini.google.com/app?hl=es', {
-            waitUntil: 'networkidle',
-            timeout: 30000
+            waitUntil: 'domcontentloaded',
+            timeout: 60000
         });
-        await geminiPage.waitForTimeout(2000);
+        await geminiPage.waitForTimeout(3000);
 
         // Encontrar input
         const inputSelector = 'div[contenteditable="true"], textarea, p[data-placeholder]';
