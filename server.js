@@ -168,12 +168,44 @@ async function askGemini(question) {
 
         await geminiPage.waitForTimeout(2000);
 
-        // Extraer respuesta
+        // Cerrar popup de bienvenida si existe
+        try {
+            const closeButton = await geminiPage.$('button[aria-label="Close"], button:has-text("×"), .close-button');
+            if (closeButton) {
+                await closeButton.click();
+                await geminiPage.waitForTimeout(500);
+            }
+        } catch (e) { /* ignorar */ }
+
+        // Extraer respuesta con múltiples selectores
         const response = await geminiPage.evaluate(() => {
+            // Selector principal
             const messages = document.querySelectorAll('[data-message-author-role="model"]');
             if (messages.length > 0) {
                 return messages[messages.length - 1].innerText;
             }
+
+            // Selectores alternativos
+            const modelResponse = document.querySelector('.model-response-text');
+            if (modelResponse) return modelResponse.innerText;
+
+            const responseContainer = document.querySelector('.response-container');
+            if (responseContainer) return responseContainer.innerText;
+
+            // Buscar por contenido de respuesta (después de "Ver razonamiento")
+            const allDivs = document.querySelectorAll('div');
+            for (const div of allDivs) {
+                if (div.innerText && div.innerText.includes('Basado en el análisis del VIN')) {
+                    return div.innerText;
+                }
+            }
+
+            // Último recurso - buscar contenido largo
+            const mainContent = document.querySelector('main');
+            if (mainContent && mainContent.innerText.length > 200) {
+                return mainContent.innerText;
+            }
+
             return 'Revisa la ventana del navegador.';
         });
 
@@ -224,6 +256,58 @@ Incluye marca, modelo del vehículo y norma de emisión.`;
             answer,
             source: 'Gemini Web (Deep Reasoning)',
             grounded: true
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Error', details: error.message });
+    }
+});
+
+// Endpoint específico para INYECTOR
+app.post('/api/vin/inyector', async (req, res) => {
+    try {
+        const { vin } = req.body;
+        if (!vin) return res.status(400).json({ error: 'VIN requerido' });
+        if (!isReady) return res.status(503).json({ error: 'Servidor no listo', details: lastError });
+
+        const question = `Para el VIN ${vin}, identifica el motor exacto y dame el SKU del INYECTOR DIESEL.
+Incluye: código OEM, código Denso/Bosch, cantidad por motor.
+Responde de forma breve y directa.`;
+
+        console.log(`🔍 Buscando INYECTOR para VIN: ${vin}`);
+        const answer = await askGemini(question);
+        console.log(`✅ Respuesta inyector (${answer.length} chars)`);
+
+        res.json({
+            vin,
+            tipo: 'inyector',
+            answer,
+            source: 'Gemini Web (Deep Reasoning)'
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Error', details: error.message });
+    }
+});
+
+// Endpoint específico para TURBO
+app.post('/api/vin/turbo', async (req, res) => {
+    try {
+        const { vin } = req.body;
+        if (!vin) return res.status(400).json({ error: 'VIN requerido' });
+        if (!isReady) return res.status(503).json({ error: 'Servidor no listo', details: lastError });
+
+        const question = `Para el VIN ${vin}, identifica el motor exacto y dame el SKU del TURBOCOMPRESOR.
+Incluye: código OEM, número de parte Garrett/BorgWarner/IHI.
+Responde de forma breve y directa.`;
+
+        console.log(`🔍 Buscando TURBO para VIN: ${vin}`);
+        const answer = await askGemini(question);
+        console.log(`✅ Respuesta turbo (${answer.length} chars)`);
+
+        res.json({
+            vin,
+            tipo: 'turbo',
+            answer,
+            source: 'Gemini Web (Deep Reasoning)'
         });
     } catch (error) {
         res.status(500).json({ error: 'Error', details: error.message });
