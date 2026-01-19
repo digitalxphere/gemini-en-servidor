@@ -340,21 +340,20 @@ VIN: ${vin} | Componente: INYECTOR DIESEL | Mercado: CHILE
 ${marca ? `Marca: ${marca}` : ''}${modelo ? ` | Modelo: ${modelo}` : ''}${año ? ` | Año: ${año}` : ''}${motor ? ` | Motor: ${motor}` : ''}
 
 PASO 1 - DECODIFICACIÓN VIN OBLIGATORIA:
-- WMI (Dígitos 1-3): Fabricante y país. MA1 = Mahindra India.
-- VDS (Dígitos 4-9): Modelo, carrocería, motor. Ej: TM4HG = Pik-Up mHawk 2.2L
-- VIS (Dígitos 10-17): Dígito 10 = AÑO MODELO. Tabla: A=2010, B=2011, C=2012, D=2013, E=2014, F=2015, G=2016, H=2017, J=2018, K=2019, L=2020, M=2021, N=2022, P=2023, R=2024
-- IMPORTANTE: Identifica el dígito 10 del VIN para determinar el año EXACTO.
+- WMI (Dígitos 1-3): Fabricante. Ejemplos: MA1=Mahindra, KNA/KNE=Kia, KMH=Hyundai, MMB/MMC=Mitsubishi, JTD=Toyota, WVW=VW, WDB=Mercedes
+- VDS (Dígitos 4-9): Modelo, motor, transmisión
+- VIS (Dígitos 10-17): Dígito 10 = AÑO. Tabla: A=2010, B=2011, C=2012, D=2013, E=2014, F=2015, G=2016, H=2017, J=2018, K=2019, L=2020, M=2021, N=2022, P=2023, R=2024
+- CRÍTICO: Usa el dígito 10 para determinar el AÑO EXACTO del vehículo.
 
 PASO 2 - FILTRO EMISIONES CHILE:
-- Distingue 'CON DPF' (Euro 5/6, post-2015) vs 'SIN DPF' (Euro 4, pre-2015).
-- Usan inyectores con caudales y códigos IMA distintos.
+- CON DPF (Euro 5/6, post-2015) vs SIN DPF (Euro 4, pre-2015) = inyectores diferentes.
 
 PASO 3 - BÚSQUEDA WEB:
-- NIVEL 1: Busca en dtparts.cl y centralturbos.cl
-- NIVEL 2: Catálogos Bosch, Denso, Delphi + TecDoc
+- NIVEL 1: dtparts.cl, centralturbos.cl
+- NIVEL 2: Catálogos Bosch, Denso, Delphi, Continental + TecDoc
 
 FORMATO JSON:
-{"Ficha_Tecnica":{"Marca":"","Modelo":"","Año":"(del dígito 10 VIN)","Motor":"","Sistema_Emisiones":"Euro X CON/SIN DPF"},"SKU_OEM_Chile":"","Fuente_Validacion":"","Referencia_Tier_1":{"Fabricante":"","Numero_Parte":""},"Cantidad_por_motor":4,"Nivel_de_Certeza":{"Porcentaje":"","Sustento":""},"Advertencias_Chile":""}`;
+{"Ficha_Tecnica":{"Marca":"","Modelo":"","Año":"(del dígito 10)","Motor":"","Sistema_Emisiones":"Euro X CON/SIN DPF"},"SKU_OEM_Chile":"","Fuente_Validacion":"","Referencia_Tier_1":{"Fabricante":"","Numero_Parte":""},"Cantidad_por_motor":4,"Nivel_de_Certeza":{"Porcentaje":"","Sustento":""},"Advertencias_Chile":""}`;
 
         console.log(`🔍 Buscando INYECTOR para: ${marca || ''} ${modelo || ''} (${vin})`);
         const answer = await askGemini(question);
@@ -392,21 +391,20 @@ VIN: ${vin} | Componente: TURBOCOMPRESOR | Mercado: CHILE
 ${marca ? `Marca: ${marca}` : ''}${modelo ? ` | Modelo: ${modelo}` : ''}${año ? ` | Año: ${año}` : ''}${motor ? ` | Motor: ${motor}` : ''}
 
 PASO 1 - DECODIFICACIÓN VIN OBLIGATORIA:
-- WMI (Dígitos 1-3): Fabricante y país. MA1 = Mahindra India.
-- VDS (Dígitos 4-9): Modelo, carrocería, motor. Ej: TM4HG = Pik-Up mHawk 2.2L
-- VIS (Dígitos 10-17): Dígito 10 = AÑO MODELO. Tabla: A=2010, B=2011, C=2012, D=2013, E=2014, F=2015, G=2016, H=2017, J=2018, K=2019, L=2020, M=2021, N=2022, P=2023, R=2024
-- IMPORTANTE: Identifica el dígito 10 del VIN para determinar el año EXACTO.
+- WMI (Dígitos 1-3): Fabricante. Ejemplos: MA1=Mahindra, KNA/KNE=Kia, KMH=Hyundai, MMB/MMC=Mitsubishi, JTD=Toyota, WVW=VW, WDB=Mercedes
+- VDS (Dígitos 4-9): Modelo, motor, transmisión
+- VIS (Dígitos 10-17): Dígito 10 = AÑO. Tabla: A=2010, B=2011, C=2012, D=2013, E=2014, F=2015, G=2016, H=2017, J=2018, K=2019, L=2020, M=2021, N=2022, P=2023, R=2024
+- CRÍTICO: Usa el dígito 10 para determinar el AÑO EXACTO del vehículo.
 
 PASO 2 - FILTRO EMISIONES CHILE:
-- Distingue 'CON DPF' (Euro 5/6, post-2015) vs 'SIN DPF' (Euro 4, pre-2015).
-- Usan turbos con actuadores diferentes.
+- CON DPF (Euro 5/6, post-2015) vs SIN DPF (Euro 4, pre-2015) = turbos con actuadores diferentes.
 
 PASO 3 - BÚSQUEDA WEB:
-- NIVEL 1: Busca en centralturbos.cl y dtparts.cl
-- NIVEL 2: Catálogos Garrett, BorgWarner, MHI + TecDoc
+- NIVEL 1: centralturbos.cl, dtparts.cl
+- NIVEL 2: Catálogos Garrett, BorgWarner, MHI, IHI + TecDoc
 
 FORMATO JSON:
-{"Ficha_Tecnica":{"Marca":"","Modelo":"","Año":"(del dígito 10 VIN)","Motor":"","Sistema_Emisiones":"Euro X CON/SIN DPF"},"SKU_OEM_Chile":"","Fuente_Validacion":"","Referencia_Tier_1":{"Fabricante":"","Numero_Parte":""},"Tipo_Turbo":"VGT/Wastegate","Nivel_de_Certeza":{"Porcentaje":"","Sustento":""},"Advertencias_Chile":""}`;
+{"Ficha_Tecnica":{"Marca":"","Modelo":"","Año":"(del dígito 10)","Motor":"","Sistema_Emisiones":"Euro X CON/SIN DPF"},"SKU_OEM_Chile":"","Fuente_Validacion":"","Referencia_Tier_1":{"Fabricante":"","Numero_Parte":""},"Tipo_Turbo":"VGT/Wastegate","Nivel_de_Certeza":{"Porcentaje":"","Sustento":""},"Advertencias_Chile":""}`;
 
         console.log(`🔍 Buscando TURBO para: ${marca || ''} ${modelo || ''} (${vin})`);
         const answer = await askGemini(question);
