@@ -191,37 +191,48 @@ async function askGemini(question) {
             }
         } catch (e) { /* ignorar */ }
 
-        // Extraer respuesta con múltiples selectores
-        const response = await geminiPage.evaluate(() => {
-            // Selector principal
-            const messages = document.querySelectorAll('[data-message-author-role="model"]');
-            if (messages.length > 0) {
-                return messages[messages.length - 1].innerText;
-            }
+        // Esperar y extraer respuesta con polling hasta tener contenido real
+        let response = null;
+        let extractAttempts = 0;
+        const maxExtractAttempts = 30; // 60 segundos adicionales máximo
 
-            // Selectores alternativos
-            const modelResponse = document.querySelector('.model-response-text');
-            if (modelResponse) return modelResponse.innerText;
-
-            const responseContainer = document.querySelector('.response-container');
-            if (responseContainer) return responseContainer.innerText;
-
-            // Buscar por contenido de respuesta (después de "Ver razonamiento")
-            const allDivs = document.querySelectorAll('div');
-            for (const div of allDivs) {
-                if (div.innerText && div.innerText.includes('Basado en el análisis del VIN')) {
-                    return div.innerText;
+        while (extractAttempts < maxExtractAttempts) {
+            response = await geminiPage.evaluate(() => {
+                // Selector principal
+                const messages = document.querySelectorAll('[data-message-author-role="model"]');
+                if (messages.length > 0) {
+                    const text = messages[messages.length - 1].innerText;
+                    // Solo devolver si tiene contenido significativo (más de 50 caracteres)
+                    if (text && text.length > 50) {
+                        return text;
+                    }
                 }
+                return null;
+            });
+
+            if (response && response.length > 50) {
+                console.log(`   ✅ Respuesta extraída (${response.length} chars)`);
+                break;
             }
 
-            // Último recurso - buscar contenido largo
-            const mainContent = document.querySelector('main');
-            if (mainContent && mainContent.innerText.length > 200) {
-                return mainContent.innerText;
-            }
+            await geminiPage.waitForTimeout(2000);
+            extractAttempts++;
 
-            return 'Revisa la ventana del navegador.';
-        });
+            if (extractAttempts % 5 === 0) {
+                console.log(`   ⏳ Esperando respuesta completa... (${extractAttempts * 2}s)`);
+            }
+        }
+
+        // Si no encontró respuesta, intentar selectores alternativos
+        if (!response || response.length < 50) {
+            response = await geminiPage.evaluate(() => {
+                const mainContent = document.querySelector('main');
+                if (mainContent && mainContent.innerText.length > 200) {
+                    return mainContent.innerText;
+                }
+                return 'Gemini está procesando. Intenta de nuevo en unos segundos.';
+            });
+        }
 
         return response;
 
