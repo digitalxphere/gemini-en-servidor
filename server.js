@@ -287,6 +287,8 @@ Dame el SKU del INYECTOR DIESEL:
 - Código OEM del fabricante
 - Código del proveedor (Denso, Bosch, Delphi, etc.)
 - Cantidad por motor
+- Porcentaje de seguridad (0-100%)
+- Comentario breve sobre la búsqueda
 
 Responde de forma breve y directa.`;
 
@@ -329,6 +331,8 @@ ${contexto}
 Dame el SKU del TURBOCOMPRESOR:
 - Código OEM del fabricante
 - Número de parte del proveedor
+- Porcentaje de seguridad (0-100%)
+- Comentario breve sobre la búsqueda
 
 Responde de forma breve y directa.`;
 
