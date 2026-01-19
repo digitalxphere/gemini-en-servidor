@@ -2,23 +2,19 @@
 
 ## Configuración
 
-### 1. Variable de entorno en Railway
+### Variable de entorno en Railway
 ```
-GEMINI_BRIDGE_URL=https://0f80b78a46e5.ngrok-free.app
+GEMINI_BRIDGE_URL=https://TU-URL-NGROK.ngrok-free.app
 ```
-
-> ⚠️ La URL de ngrok cambia cada vez que reinicias. Actualízala cuando cambie.
 
 ---
 
 ## Servicio para MAI Smart
 
-Crea este archivo en el backend de MAI Smart:
-
 ### `services/geminiVinService.js`
 
 ```javascript
-const GEMINI_BRIDGE_URL = process.env.GEMINI_BRIDGE_URL || 'https://0f80b78a46e5.ngrok-free.app';
+const GEMINI_BRIDGE_URL = process.env.GEMINI_BRIDGE_URL;
 
 const headers = {
   'Content-Type': 'application/json',
@@ -26,14 +22,22 @@ const headers = {
 };
 
 /**
- * Buscar información de inyector por VIN
+ * Buscar SKU de inyector por datos del vehículo
+ * @param {Object} vehiculo - Datos del vehículo
+ * @param {string} vehiculo.vin - VIN (requerido)
+ * @param {string} vehiculo.marca - Marca del vehículo
+ * @param {string} vehiculo.modelo - Modelo del vehículo
+ * @param {string} vehiculo.version - Versión/trim
+ * @param {string} vehiculo.año - Año de fabricación
+ * @param {string} vehiculo.motor - Número de motor
+ * @param {string} vehiculo.combustible - Tipo de combustible
  */
-async function buscarInyector(vin) {
+async function buscarInyector(vehiculo) {
   try {
     const response = await fetch(`${GEMINI_BRIDGE_URL}/api/vin/inyector`, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ vin })
+      body: JSON.stringify(vehiculo)
     });
     
     if (!response.ok) throw new Error('Error en servidor Gemini');
@@ -52,14 +56,15 @@ async function buscarInyector(vin) {
 }
 
 /**
- * Buscar información de turbo por VIN
+ * Buscar SKU de turbo por datos del vehículo
+ * @param {Object} vehiculo - Datos del vehículo (mismos parámetros que buscarInyector)
  */
-async function buscarTurbo(vin) {
+async function buscarTurbo(vehiculo) {
   try {
     const response = await fetch(`${GEMINI_BRIDGE_URL}/api/vin/turbo`, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ vin })
+      body: JSON.stringify(vehiculo)
     });
     
     if (!response.ok) throw new Error('Error en servidor Gemini');
@@ -78,7 +83,7 @@ async function buscarTurbo(vin) {
 }
 
 /**
- * Verificar si el servidor Gemini está disponible
+ * Verificar conexión con el servidor Gemini
  */
 async function verificarConexion() {
   try {
@@ -92,51 +97,80 @@ async function verificarConexion() {
   }
 }
 
-module.exports = {
-  buscarInyector,
-  buscarTurbo,
-  verificarConexion
-};
+module.exports = { buscarInyector, buscarTurbo, verificarConexion };
 ```
 
 ---
 
-## Uso en controladores
+## Ejemplo de uso en MAI Smart
+
+### Cuando el usuario busca por patente:
 
 ```javascript
-const { buscarInyector, buscarTurbo } = require('../services/geminiVinService');
+const { buscarInyector, buscarTurbo } = require('./services/geminiVinService');
 
-// Endpoint en MAI Smart
-router.post('/api/repuestos/buscar-vin', async (req, res) => {
-  const { vin, tipo } = req.body; // tipo: 'inyector' | 'turbo'
-  
-  let resultado;
-  if (tipo === 'turbo') {
-    resultado = await buscarTurbo(vin);
-  } else {
-    resultado = await buscarInyector(vin);
-  }
-  
-  res.json(resultado);
-});
+// Datos que ya tienes de la búsqueda por patente
+const vehiculo = {
+  vin: '8AFAR22L0CJ052314',
+  marca: 'FORD',
+  modelo: 'RANGER XLT',
+  version: '2.5 LIMITED MT 4X2',
+  año: '2013',
+  motor: 'CJ052314',
+  combustible: 'BENCINA'
+};
+
+// Cuando el usuario hace clic en "TURBO"
+const turbo = await buscarTurbo(vehiculo);
+console.log(turbo.respuesta);
+
+// Cuando el usuario hace clic en "INYECTOR"
+const inyector = await buscarInyector(vehiculo);
+console.log(inyector.respuesta);
 ```
+
+---
+
+## Parámetros del body
+
+| Campo | Tipo | Requerido | Descripción |
+|-------|------|-----------|-------------|
+| `vin` | string | ✅ Sí | VIN del vehículo |
+| `marca` | string | No | Marca (FORD, TOYOTA, etc.) |
+| `modelo` | string | No | Modelo (RANGER, HILUX, etc.) |
+| `version` | string | No | Versión/trim del vehículo |
+| `año` | string | No | Año de fabricación |
+| `motor` | string | No | Número de motor |
+| `combustible` | string | No | DIESEL, BENCINA, etc. |
 
 ---
 
 ## Endpoints disponibles
 
-| Método | Endpoint | Body | Descripción |
-|--------|----------|------|-------------|
-| POST | `/api/vin/inyector` | `{ vin: "..." }` | Busca SKU de inyector |
-| POST | `/api/vin/turbo` | `{ vin: "..." }` | Busca SKU de turbo |
-| POST | `/api/vin` | `{ vin: "..." }` | Busca ambos |
-| GET | `/api/health` | - | Verifica estado |
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| POST | `/api/vin/inyector` | Busca SKU de inyector |
+| POST | `/api/vin/turbo` | Busca SKU de turbo |
+| GET | `/api/health` | Verifica estado del servidor |
+
+---
+
+## Ejemplo de respuesta
+
+```json
+{
+  "vin": "8AFAR22L0CJ052314",
+  "tipo": "turbo",
+  "answer": "Motor: 2.5L Diesel\nCódigo OEM: AB39-6K682-AC\nProveedor: BorgWarner K03\n...",
+  "source": "Gemini Web (Deep Reasoning)"
+}
+```
 
 ---
 
 ## Notas importantes
 
-1. **Tiempo de respuesta**: 15-60 segundos (Deep Reasoning)
+1. **Tiempo de respuesta**: 15-60 segundos
 2. **Header requerido**: `ngrok-skip-browser-warning: true`
-3. **El Mac debe estar encendido** con Chrome y el servidor corriendo
-4. **URL ngrok cambia** cada vez que reinicias ngrok
+3. **El Mac debe estar encendido** con el servidor corriendo
+4. **Mientras más datos envíes**, mejor será la respuesta
